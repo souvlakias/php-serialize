@@ -1,6 +1,6 @@
 // eslint-disable-next-line import/no-cycle
 import Parser from './parser'
-import { isInteger, getClass, getIncompleteClass, __PHP_Incomplete_Class, invariant } from './helpers'
+import { isInteger, getClass, getIncompleteClass, __PHP_Incomplete_Class, invariant, isValidKey } from './helpers'
 
 export type Options = {
   strict: boolean
@@ -71,6 +71,8 @@ function unserializeItem(parser: Parser, scope: Record<string, any>, options: Op
     const isArray = pairs.every((item, idx) => isInteger(item.key) && idx === item.key)
     const result = isArray ? [] : {}
     pairs.forEach(({ key, value }) => {
+      const [isValid, errorMessage] = isValidKey(key)
+      invariant(isValid, errorMessage)  
       result[key] = value
     })
     return result
@@ -80,10 +82,13 @@ function unserializeItem(parser: Parser, scope: Record<string, any>, options: Op
     parser.seekExpected(':')
     const pairs = parser.getByLength('{', '}', length => unserializePairs(parser, length, scope, options))
     const result = getClassReference(name, scope, options.strict)
+    invariant(!result.unserialize, `Found unserialize method on class ${name} but expected notserializable-class`)
 
     const PREFIX_PRIVATE = `\u0000${name}\u0000`
     const PREFIX_PROTECTED = `\u0000*\u0000`
     pairs.forEach(({ key, value }) => {
+      const [isValid, errorMessage] = isValidKey(key)
+      invariant(isValid, errorMessage)
       if (key.startsWith(PREFIX_PRIVATE)) {
         // Private field
         result[key.slice(PREFIX_PRIVATE.length)] = value
