@@ -71,8 +71,7 @@ function unserializeItem(parser: Parser, scope: Record<string, any>, options: Op
     const isArray = pairs.every((item, idx) => isInteger(item.key) && idx === item.key)
     const result = isArray ? [] : {}
     pairs.forEach(({ key, value }) => {
-      const [isValid, errorMessage] = isValidKey(key)
-      invariant(isValid, errorMessage)  
+      invariant(...isValidKey(key))
       result[key] = value
     })
     return result
@@ -87,8 +86,7 @@ function unserializeItem(parser: Parser, scope: Record<string, any>, options: Op
     const PREFIX_PRIVATE = `\u0000${name}\u0000`
     const PREFIX_PROTECTED = `\u0000*\u0000`
     pairs.forEach(({ key, value }) => {
-      const [isValid, errorMessage] = isValidKey(key)
-      invariant(isValid, errorMessage)
+      invariant(... isValidKey(key));
       if (key.startsWith(PREFIX_PRIVATE)) {
         // Private field
         result[key.slice(PREFIX_PRIVATE.length)] = value
